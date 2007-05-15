@@ -1,0 +1,65 @@
+Changelog
+=========
+
+Version: 2.0.0
+Date   : 10/05/2007
+Author : Ian Ventura-Whiting (Fizz)
+Notes  : This version represents a major rewrite of viewstate. It
+         was getting a little out-of-date.
+Changes: Feature : Added support for new ASP.net viewstate data.
+         Feature : Uses the CMake build system.
+         Feature : Added installation readme file.
+         Improved: Commandline interface.
+         Fixed   : Removed the comment lines at the bottom of the
+                   LICENSE file.
+
+VERSION: 1.5
+DATE:    20/02/2006
+AUTHOR:  Fizz
+DETAILS: Output data to stdout on viewstate failure
+         Fixed encrypted viewstate bug
+         Improved viewstate parsing
+         Fixed a small memory leak
+         A few optimisation improvements :-)
+         Included LICENSE file
+
+VERSION: 1.4
+DATE:    05/04/2005
+AUTHOR:  Fizz
+DETAILS: Added output to stdout option.
+         Added help mode with examples.
+         Added HTML input on check mode.
+         Fixed a minor display bug.
+         Example viewstate included.
+         Improved documentation (README).
+         A few de-optimisations to imporove builds. :-(
+
+VERSION: 1.3.0
+DATE:    17/02/2005
+AUTHOR:  Fizz
+DETAILS: Added URL Encoding capability.
+         General optimisations (new binary is about 1/3 of the size).
+         Fixed a minor display bug.
+         Improved documentation (README, INSTALL and ChangeLog)
+
+VERSION: 1.2.0
+DATE:    08/12/2004
+AUTHOR:  Fizz
+DETAILS: Improved Parse routine to catch unexpected "items".
+         Improved Error Handling Routines - Stop program exceptions with invalid data.
+         Improve Command Line Help.
+
+VERSION: 1.1.0
+DATE:    01/12/2004
+AUTHOR:  Fizz
+DETAILS: Program now in C++ and can be built on Linux, UNIX and Windows.
+         Added a check routine.
+         Added varying verbose levels.
+         Display HASH if found, and disply option is enabled.
+         Can Append a new HASH (must be provided).
+         Return codes returned for inclusion in scripts.
+
+VERSION: 1.0
+DATE:    19/11/2004
+AUTHOR:  Fizz
+DETAILS: Original version, written in PHP.
