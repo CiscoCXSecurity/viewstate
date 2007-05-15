@@ -481,19 +481,18 @@ int main(int argc, char *argv[])
 					// Encode Viewstate
 					case mode_encode:
 
+						tempString.clear();
 						// Append a hash?
 						if (options.hashFile != 0)
 						{
-							tempString.clear();
-
 							// Open hash file...
 							if (options.noise == noise_verbose)
-								cout << COL_GREEN << "Opening Hash File:" << RESET << endl;
+								cout << COL_GREEN << "Opening Hash File:" << RESET;
 							hashFile.open(argv[options.hashFile] + 7, ios::binary);
 							if (hashFile.is_open())
 							{
 								if (options.noise == noise_verbose)
-									cout << " OK" << endl;
+									cout << " OK" << endl << COL_GREEN << "Appending Hash:" << RESET;
 
 								// get length of file...
 								hashFile.seekg (0, ios::end);
@@ -505,17 +504,17 @@ int main(int argc, char *argv[])
 
 								// Read file...
 								hashFile.read (fileBuffer, fileLength);
-								str_Hash = fileBuffer;
-								str_Hash = str_Hash.substr(0, fileLength);
-								str_Hash = StringStrip(str_Hash);
+								tempString = fileBuffer;
+								tempString = tempString.substr(0, fileLength);
+								tempString = StringStrip(tempString);
 								hashFile.close();
-								str_FileData.append(str_Hash);
+								inputString.append(tempString);
 
 								// free memory...
-  								delete[] chr_HashBuffer;
+								delete[] fileBuffer;
 
-								if (bl_Verbose == true)
-									cout << "  [OK]" << endl;
+								if (options.noise == noise_verbose)
+									cout << " OK" << endl;
 							}
 							else
 							{
