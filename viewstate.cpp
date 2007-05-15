@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
 				options.htmlInput = true;
 		}
 
-		// Show hash option
+/*		// Show hash option
 		else if (strcmp(argv[loop], "--showhash") == 0)
 		{
 			if (options.viewstateMode == mode_encode)
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 				showHelp = true;
 			else
 				options.parseInput = true;
-		}
+		}*/
 
 		// Hash file
 		else if (strncmp(argv[loop], "--hash=", 7) == 0)
@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
 		cout << "   raw HTML. The default is to treat the input as raw" << endl;
 		cout << "   viewstate data." << endl << endl;
 
-		cout << COL_GREEN << "   --showhash" << RESET << endl;
+		/*cout << COL_GREEN << "   --showhash" << RESET << endl;
 		cout << "   Show the viewstate hash, if one exists. Viewstate" << endl;
 		cout << "   has a hash appended by default, if a hash doesn't" << endl;
 		cout << "   exist then it is possible to modify the data and" << endl;
@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
 
 		cout << COL_GREEN << "   --parse" << RESET << endl;
 		cout << "   Parse the viewstate data to make it more human" << endl;
-		cout << "   readable and output to stdout." << endl << endl;
+		cout << "   readable and output to stdout." << endl << endl;*/
 
 		cout << COL_BLUE << "Encode Mode Options:" << RESET << endl << endl;
 
@@ -524,8 +524,6 @@ int main(int argc, char *argv[])
 								cout << COL_RED << "ERROR: Could not open hash file!" << RESET << endl;
 							}
 						}
-
-
 
 						// Encode the viewstate...
 						if (options.noise == noise_verbose)
