@@ -2,13 +2,12 @@ Changelog
 =========
 
 Version: 2.0.0
-Date   : 10/05/2007
+Date   : 15/05/2007
 Author : Ian Ventura-Whiting (Fizz)
 Notes  : This version represents a major rewrite of viewstate. It
          was getting a little out-of-date.
 Changes: Feature : Added support for new ASP.net viewstate data.
          Feature : Uses the CMake build system.
-         Feature : Added installation readme file.
          Improved: Commandline interface.
          Fixed   : Removed the comment lines at the bottom of the
                    LICENSE file.
