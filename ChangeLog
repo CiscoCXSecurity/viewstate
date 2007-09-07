@@ -2,7 +2,7 @@ Changelog
 =========
 
 Version: 2.0.0
-Date   : 15/05/2007
+Date   : 05/09/2007
 Author : Ian Ventura-Whiting (Fizz)
 Notes  : This version represents a major rewrite of viewstate. It
          was getting a little out-of-date.
