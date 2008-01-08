@@ -50,6 +50,7 @@ const char *COL_CYAN = "";
 
 // Viewstate includes...
 #include "base64.c"
+#include "misc.c"
 #include "parse.c"
 #include "writedata.c"
 
@@ -81,18 +82,18 @@ int main(int argc, char *argv[])
 	int hash = false;
 	int hex = true;
 	int raw = false;
+	int error = false;
 	long viewstateLength = 0;
 	FILE *inputFile = stdin;
 	FILE *outputFile = stdout;
 	char *inputFileName = 0;
 	char *outputFileName = 0;
-	char temporaryFileName[64];
 	char *inputString = 0;
 	char tempChar = 0;
 	struct stat *fileStats = 0;
 	int parseStatus = 0;
 	int verbose = 1;
-	int argLoop = 0;
+	long argLoop = 0;
 
 	// Get program parameters
 	for (argLoop = 1; argLoop < argc; argLoop++)
@@ -168,10 +169,10 @@ int main(int argc, char *argv[])
 			printf("                       input is from stdin.\n");
 			printf("  %s--output=<file>%s      File  to  output to.  By  default\n", COL_GREEN, RESET);
 			printf("                       output is from stdout.\n");
-			printf("  %s--parse                If possible, parse the viewstate.\n", COL_GREEN, RESET);
-			printf("  %s--hash                 Output hash, if one exists.\n", COL_GREEN, RESET);
+			printf("  %s--parse%s              If possible, parse the viewstate.\n", COL_GREEN, RESET);
+			printf("  %s--hash%s               Output hash, if one exists.\n", COL_GREEN, RESET);
 			printf("  %s--raw%s                The input is raw viewstate data.\n", COL_GREEN, RESET);
-			printf("  %s--no-hex               Disable hex output.\n", COL_GREEN, RESET);
+			printf("  %s--no-hex%s             Disable hex output.\n", COL_GREEN, RESET);
 			printf("  %s--verbose%s            Increase verbosity.\n", COL_GREEN, RESET);
 			printf("  %s--quiet%s              Decrease verbosity.\n", COL_GREEN, RESET);
 			printf("  %s--version%s            Display the program version.\n", COL_GREEN, RESET);
@@ -188,33 +189,6 @@ int main(int argc, char *argv[])
 
 				if (verbose > 1)
 					fprintf(outputFile, "%s%s%s\n", COL_BLUE, program_banner, RESET);
-
-				// Process HTML file input
-				if (raw == false)
-				{
-					// Determine File Size...
-					fileStats = malloc(sizeof(struct stat));
-					memset(fileStats, 0, sizeof(struct stat));
-					stat(inputFileName, fileStats);
-					if (fileStats->st_size == 0)
-					{
-						free(fileStats);
-						return 1;
-					}
-	
-					// Reserve memory for input...
-					inputString = malloc(fileStats->st_size + 1);
-					memset (inputString, 0, fileStats->st_size + 1);
-	
-					// Read in input...
-					if (inputFileName != 0)
-						inputFile = fopen(inputFileName, "r");
-					if (inputFile != NULL)
-					{
-					
-						fclose(inputFile);
-					}
-				}
 
 				// Determine File Size...
 				fileStats = malloc(sizeof(struct stat));
@@ -235,121 +209,135 @@ int main(int argc, char *argv[])
 					inputFile = fopen(inputFileName, "r");
 				if (inputFile != NULL)
 				{
-					fgets(inputString, fileStats->st_size, inputFile);
+					for (argLoop = 0; argLoop < fileStats->st_size; argLoop++)
+						inputString[argLoop] = fgetc(inputFile);
+
+					// If viewstate needs to be extracted from HTML...
+					if (raw == false)
+					{
+						if (getViewstateFromHTML(inputString, fileStats->st_size) != true)
+						{
+							error = true;
+							fprintf(outputFile, "%sERROR:%s No viewstate data in HTML.\n", COL_RED, RESET);
+						}
+					}
 
 					// Decode viewstate...
-					viewstateLength = base64DecodeChars(inputString);
-					if (viewstateLength > 0)
+					if (error == false)
 					{
-
-						// New Viewstate...
-						if (inputString[0] == -1)
+						viewstateLength = base64DecodeChars(inputString);
+						if (viewstateLength > 0)
 						{
-							if (verbose > 0)
-							{
-								fprintf(outputFile, "%sType      :%s New\n", COL_BLUE, RESET);
-								fprintf(outputFile, "%sProtection:%s Unknown\n", COL_BLUE, RESET);
-								fprintf(outputFile, "%sValidation:%s N/A\n", COL_BLUE, RESET);
-								fprintf(outputFile, "%sViewstate :%s\n", COL_BLUE, RESET);
-							}
-							printData(outputFile, inputString, viewstateLength, hex);
-							if (verbose > 0)
-								fprintf(outputFile, "\n");
-						}
-
-						// Old Viewstate...
-						else if ((inputString[0] == 't') && (inputString[1] == '<'))
-						{
-							parseStatus = parseOldViewstate(outputFile, inputString, 0, 0, verbose, false);
-							if (parseStatus == -1)
+	
+							// New Viewstate...
+							if (inputString[0] == -1)
 							{
 								if (verbose > 0)
 								{
-									fprintf(outputFile, "%sType      :%s Old\n", COL_BLUE, RESET);
-									fprintf(outputFile, "%sProtection:%s Unknown%s\n", COL_BLUE, COL_RED, RESET);
-									fprintf(outputFile, "%sValidation:%s Failed%s\n", COL_BLUE, COL_RED, RESET);
+									fprintf(outputFile, "%sType      :%s New\n", COL_BLUE, RESET);
+									fprintf(outputFile, "%sProtection:%s Unknown\n", COL_BLUE, RESET);
+									fprintf(outputFile, "%sValidation:%s N/A\n", COL_BLUE, RESET);
 									fprintf(outputFile, "%sViewstate :%s\n", COL_BLUE, RESET);
 								}
 								printData(outputFile, inputString, viewstateLength, hex);
 								if (verbose > 0)
 									fprintf(outputFile, "\n");
 							}
-							else if (parseStatus == 0)
+	
+							// Old Viewstate...
+							else if ((inputString[0] == 't') && (inputString[1] == '<'))
 							{
-								if (verbose > 0)
+								parseStatus = parseOldViewstate(outputFile, inputString, 0, 0, verbose, false);
+								if (parseStatus == -1)
 								{
-									fprintf(outputFile, "%sType      :%s Old\n", COL_BLUE, RESET);
-									fprintf(outputFile, "%sProtection:%s None\n", COL_BLUE, RESET);
-									fprintf(outputFile, "%sValidation:%s Passed\n", COL_BLUE, RESET);
-									fprintf(outputFile, "%sViewstate :%s\n", COL_BLUE, RESET);
-								}
-								if (parse == true)
-									parseOldViewstate(outputFile, inputString, 0, 0, verbose, parse);
-								else
+									if (verbose > 0)
+									{
+										fprintf(outputFile, "%sType      :%s Old\n", COL_BLUE, RESET);
+										fprintf(outputFile, "%sProtection:%s Unknown%s\n", COL_BLUE, COL_RED, RESET);
+										fprintf(outputFile, "%sValidation:%s Failed%s\n", COL_BLUE, COL_RED, RESET);
+										fprintf(outputFile, "%sViewstate :%s\n", COL_BLUE, RESET);
+									}
 									printData(outputFile, inputString, viewstateLength, hex);
-								if (verbose > 0)
-									fprintf(outputFile, "\n");
+									if (verbose > 0)
+										fprintf(outputFile, "\n");
+								}
+								else if (parseStatus == 0)
+								{
+									if (verbose > 0)
+									{
+										fprintf(outputFile, "%sType      :%s Old\n", COL_BLUE, RESET);
+										fprintf(outputFile, "%sProtection:%s None\n", COL_BLUE, RESET);
+										fprintf(outputFile, "%sValidation:%s Passed\n", COL_BLUE, RESET);
+										fprintf(outputFile, "%sViewstate :%s\n", COL_BLUE, RESET);
+									}
+									if (parse == true)
+										parseOldViewstate(outputFile, inputString, 0, 0, verbose, parse);
+									else
+										printData(outputFile, inputString, viewstateLength, hex);
+									if (verbose > 0)
+										fprintf(outputFile, "\n");
+								}
+								else
+								{
+									if (verbose > 0)
+									{
+										fprintf(outputFile, "%sType      :%s Old\n", COL_BLUE, RESET);
+										fprintf(outputFile, "%sProtection:%s Hash\n", COL_BLUE, RESET);
+										fprintf(outputFile, "%sValidation:%s Passed\n", COL_BLUE, RESET);
+										fprintf(outputFile, "%sViewstate :%s\n", COL_BLUE, RESET);
+									}
+									if (parse == true)
+										parseOldViewstate(outputFile, inputString, 0, 0, verbose, parse);
+									else
+									{
+										tempChar = inputString[parseStatus];
+										inputString[parseStatus] = 0;
+										printData(outputFile, inputString, parseStatus, hex);
+										inputString[parseStatus] = tempChar;
+									}
+									if (verbose > 0)
+										fprintf(outputFile, "\n");
+									if (hash == true)
+									{
+										if (verbose > 0)
+											fprintf(outputFile, "%sHash      :%s\n", COL_BLUE, RESET);
+										printData(outputFile, inputString + parseStatus, viewstateLength - parseStatus, hex);
+										if (verbose > 0)
+											fprintf(outputFile, "\n");
+									}
+								}
 							}
+	
+							// Encrypted Viewstate...
 							else
 							{
 								if (verbose > 0)
 								{
-									fprintf(outputFile, "%sType      :%s Old\n", COL_BLUE, RESET);
-									fprintf(outputFile, "%sProtection:%s Hash\n", COL_BLUE, RESET);
-									fprintf(outputFile, "%sValidation:%s Passed\n", COL_BLUE, RESET);
+									fprintf(outputFile, "%sType      :%s Unknown%s\n", COL_BLUE, COL_RED, RESET);
+									fprintf(outputFile, "%sProtection: Encrypted%s\n", COL_BLUE, RESET);
+									fprintf(outputFile, "%sValidation:%s N/A\n", COL_BLUE, RESET);
 									fprintf(outputFile, "%sViewstate :%s\n", COL_BLUE, RESET);
 								}
-								if (parse == true)
-									parseOldViewstate(outputFile, inputString, 0, 0, verbose, parse);
-								else
-								{
-									tempChar = inputString[parseStatus];
-									inputString[parseStatus] = 0;
-									printData(outputFile, inputString, parseStatus, hex);
-									inputString[parseStatus] = tempChar;
-								}
+								printData(outputFile, inputString, viewstateLength, hex);
 								if (verbose > 0)
 									fprintf(outputFile, "\n");
-								if (hash == true)
-								{
-									if (verbose > 0)
-										fprintf(outputFile, "%sHash      :%s\n", COL_BLUE, RESET);
-									printData(outputFile, inputString + parseStatus, viewstateLength - parseStatus, hex);
-									if (verbose > 0)
-										fprintf(outputFile, "\n");
-								}
 							}
+	
 						}
-
-						// Encrypted Viewstate...
 						else
 						{
 							if (verbose > 0)
-							{
-								fprintf(outputFile, "%sType      :%s Unknown%s\n", COL_BLUE, COL_RED, RESET);
-								fprintf(outputFile, "%sProtection: Encrypted%s\n", COL_BLUE, RESET);
-								fprintf(outputFile, "%sValidation:%s N/A\n", COL_BLUE, RESET);
-								fprintf(outputFile, "%sViewstate :%s\n", COL_BLUE, RESET);
-							}
-							printData(outputFile, inputString, viewstateLength, hex);
-							if (verbose > 0)
-								fprintf(outputFile, "\n");
+								fprintf(outputFile, "%sERROR:%s Decode failed.\n", COL_RED, RESET);
 						}
+					}
 
-					}
-					else
-					{
-						if (verbose > 0)
-							fprintf(outputFile, "%sERROR:%s Decode failed.\n", COL_RED, RESET);
-					}
-	
 					// Close file...
 					if (inputFileName != 0)
 						fclose(inputFile);
 				}
 				else if (verbose > 0)
 					fprintf(outputFile, "%sERROR:%s Could not open input.\n", COL_RED, RESET);
-	
+
 				// Free input String
 				free(inputString);
 	
@@ -364,5 +352,6 @@ int main(int argc, char *argv[])
 				fprintf(outputFile, "%sERROR:%s Could not open output.\n", COL_RED, RESET);
 			break;
 	}
+	return 0;
 }
 
