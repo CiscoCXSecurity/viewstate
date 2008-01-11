@@ -20,6 +20,7 @@
 #define mode_help 0
 #define mode_version 1
 #define mode_decode 2
+#define mode_encode 3
 
 #define false 0
 #define true 1
@@ -89,11 +90,13 @@ int main(int argc, char *argv[])
 	char *inputFileName = 0;
 	char *outputFileName = 0;
 	char *inputString = 0;
+	char *outputString = 0;
 	char tempChar = 0;
 	struct stat *fileStats = 0;
 	int parseStatus = 0;
 	int verbose = 1;
 	long argLoop = 0;
+
 
 	// Get program parameters
 	for (argLoop = 1; argLoop < argc; argLoop++)
@@ -109,6 +112,10 @@ int main(int argc, char *argv[])
 		// Decode
 		else if (strcmp("--decode", argv[argLoop]) == 0)
 			mode = mode_decode;
+
+		// Encode
+		else if (strcmp("--encode", argv[argLoop]) == 0)
+			mode = mode_encode;
 
 		// Input
 		else if (strncmp("--input=", argv[argLoop], 8) == 0)
@@ -142,7 +149,8 @@ int main(int argc, char *argv[])
 		else if (strcmp("--raw", argv[argLoop]) == 0)
 			raw = true;
 	}
-	
+
+
 	switch (mode)
 	{
 		case mode_version:
@@ -165,6 +173,7 @@ int main(int argc, char *argv[])
 			printf("  %s%s [Options]%s\n\n", COL_GREEN, argv[0], RESET);
 			printf("%sOptions:%s\n", COL_BLUE, RESET);
 			printf("  %s--decode%s             Decode viewstate data.\n", COL_GREEN, RESET);
+			printf("  %s--encode%s             Encode viewstate data.\n", COL_GREEN, RESET);
 			printf("  %s--input=<file>%s       Input file to process. By default\n", COL_GREEN, RESET);
 			printf("                       input is from stdin.\n");
 			printf("  %s--output=<file>%s      File  to  output to.  By  default\n", COL_GREEN, RESET);
@@ -180,6 +189,8 @@ int main(int argc, char *argv[])
 			printf("                       reading.\n");
 			break;
 
+
+		// Decode Viewstate
 		case mode_decode:
 			// Open output file...
 			if (outputFileName != 0)
@@ -334,6 +345,74 @@ int main(int argc, char *argv[])
 					// Close file...
 					if (inputFileName != 0)
 						fclose(inputFile);
+				}
+				else if (verbose > 0)
+					fprintf(outputFile, "%sERROR:%s Could not open input.\n", COL_RED, RESET);
+
+				// Free input String
+				free(inputString);
+	
+				// Free Stats...
+				free(fileStats);
+				
+				// Close output File...
+				if (outputFileName != 0)
+					fclose(outputFile);
+			}
+			else if (verbose > 0)
+				fprintf(outputFile, "%sERROR:%s Could not open output.\n", COL_RED, RESET);
+			break;
+
+
+		// Encode Viewstate
+		case mode_encode:
+			// Open output file...
+			if (outputFileName != 0)
+				outputFile = fopen(outputFileName, "w");
+			if (outputFile != 0)
+			{
+
+				if (verbose > 1)
+					fprintf(outputFile, "%s%s%s\n", COL_BLUE, program_banner, RESET);
+
+				// Determine File Size...
+				fileStats = malloc(sizeof(struct stat));
+				memset(fileStats, 0, sizeof(struct stat));
+				stat(inputFileName, fileStats);
+				if (fileStats->st_size == 0)
+				{
+					free(fileStats);
+					return 1;
+				}
+
+				// Reserve memory for input...
+				inputString = malloc(fileStats->st_size + 1);
+				memset (inputString, 0, fileStats->st_size + 1);
+
+				// Read in input...
+				if (inputFileName != 0)
+					inputFile = fopen(inputFileName, "r");
+				if (inputFile != NULL)
+				{
+					for (argLoop = 0; argLoop < fileStats->st_size; argLoop++)
+						inputString[argLoop] = fgetc(inputFile);
+
+					// Reserve memory for output string
+					outputString = malloc((int)(fileStats->st_size / 3 * 4) + 2);
+					memset (outputString, 0, (int)(fileStats->st_size / 3 * 4) + 2);
+
+					// Encode string...
+					if (base64Encode(inputString, fileStats->st_size, outputString) == true)
+					{
+						if (verbose > 0)
+							fprintf(outputFile, "%sViewstate :%s\n", COL_BLUE, RESET);
+						fprintf(outputFile, "%s", outputString);
+						if (verbose > 0)
+							fprintf(outputFile, "\n");
+					}
+					else
+						fprintf(outputFile, "%sERROR:%s Failed to encode string.\n", COL_RED, RESET);
+
 				}
 				else if (verbose > 0)
 					fprintf(outputFile, "%sERROR:%s Could not open input.\n", COL_RED, RESET);
