@@ -87,6 +87,86 @@ int base64Check(char *inputString)
 		return false;
 }
 
+// Base 64 encode
+// (but first you need to reserve a string big enough)
+int base64Encode(char *inputString, long inputSize, char *outputString)
+{
+	// Variables...
+	long loop = 0;
+	long outLoop = 0;
+	char in1 = 0;
+	char in2 = 0;
+	char in3 = 0;
+	char inter1 = 0;
+	char inter2 = 0;
+	char inter3 = 0;
+	char inter4 = 0;
+
+	// Check string length
+	if (inputSize == 0)
+		return false;
+
+	// Convert String to Base 64...
+	for (loop = 0; loop < inputSize; loop += 3)
+	{
+		// In Chars...
+		in1 = inputString[loop];
+		if (loop + 1 < inputSize)
+			in2 = inputString[loop + 1];
+		else
+			in2 = 0;
+		if (loop + 2 < inputSize)
+			in3 = inputString[loop + 2];
+		else
+			in3 = 0;
+
+		// 1st char...
+		inter1 = in1;
+		inter1 = inter1 >> 2;
+		inter1 = inter1 & 63;
+		outputString[outLoop] = base64String[inter1];
+
+		// 2nd char...
+		inter2 = in1;
+		inter2 = inter2 << 4;
+		inter2 = inter2 & 48;
+		inter3 = in2;
+		inter3 = inter3 >> 4;
+		inter3 = inter3 & 15;
+		inter2 = inter2 | inter3;
+		outputString[outLoop + 1] = base64String[inter2];
+
+		// 3rd Char
+		if (loop + 1 < inputSize)
+		{
+			inter3 = in2;
+			inter3 = inter3 << 2;
+			inter3 = inter3 & 60;
+			inter4 = in3;
+			inter4 = inter4 >> 6;
+			inter4 = inter4 & 3;
+			inter3 = inter3 | inter4;
+			outputString[outLoop + 2] = base64String[inter3];
+		}
+		else
+			outputString[outLoop + 2] = 61;
+
+		// 4th..
+		if (loop + 2 < inputSize)
+		{
+			inter4 = in3;
+			inter4 = inter4 & 63;
+			outputString[outLoop + 3] = base64String[inter4];
+		}
+		else
+			outputString[outLoop + 3] = 61;
+		
+		outLoop += 4;
+	}
+
+	return true;
+}
+
 
 long base64DecodeChars(char *inputString)
 {
