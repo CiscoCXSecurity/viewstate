@@ -7,7 +7,8 @@ Author : Ian Ventura-Whiting (Fizz)
 Notes  : This version represents a major rewrite of viewstate. It
          was getting a little out-of-date.
 Changes: Feature : Added support for new ASP.net viewstate data.
-         Feature : Uses the CMake build system.
+         Feature : Build with a Makefile
+         Feature : You can get viewstate directly from the web.
          Improved: Commandline interface.
          Improved: Added hex output for non-printable characters.
          Fixed   : Removed the comment lines at the bottom of the
