@@ -215,8 +215,8 @@ int main(int argc, char *argv[])
 			printf("to ensure that the data  has not  been modified.  However,\n");
 			printf("viewstate can also be sent without any form of protection,\n");
 			printf("this enables the data to be modified.\n");
-			printf("If decode or encode are not specified,  it is assumed that\n");
-			printf("help is required.\n\n");
+			printf("When running  viewstate,  if the decode or  encode options\n");
+			printf("are not specified,  it is assumed that help is required.\n\n");
 			printf("%sCommand:%s\n", COL_BLUE, RESET);
 			printf("  %s%s [Mode] [Options]%s\n\n", COL_GREEN, argv[0], RESET);
 			printf("%sModes:%s\n", COL_BLUE, RESET);

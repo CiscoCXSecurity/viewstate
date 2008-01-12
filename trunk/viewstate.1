@@ -1,0 +1,68 @@
+.TH viewstate 1 "12 January 2008"
+.SH NAME
+viewstate \- A .Net viewstate decoder / encoder
+.SH SYNOPSIS
+.B viewstate
+.RI [ mode ] [ options ]
+.SH DESCRIPTION
+Viewstate is a .Net viewstate decoder and encoder.
+Viewstate data can be encrypted or have a hash appended
+to ensure that the data has not been modified. However,
+viewstate can also be sent without any form of protection,
+this enables the data to be modified.
+.br
+When running viewstate, if decode or encode are not specified, it is assumed that
+help is required.
+.SH MODES
+.TP
+.B \-\-decode
+.br
+Decode the viewstate.
+.TP
+.B \-\-encode
+Encode the viewstate.
+.TP
+.B \-\-help
+.br
+Show summary of options.
+.TP
+.B \-\-version
+Show version of program.
+.SH GENERAL OPTIONS
+.TP
+.B \-\-input\-file=<file>
+Input file to process. By default
+input is from stdin.
+.TP
+.B \-\-output\-file=<file>
+File to output to. By default
+output is from stdout.
+.TP
+.B \-\-verbose
+Increase verbosity.
+.TP
+.B \-\-quiet
+.br
+Decrease verbosity.
+.SH DECODE OPTIONS
+.TP
+.B \-\-url=<file>
+.br
+Get the viewstate from a URL, no
+SSL support in this version. Specify
+as http://www.somewhere.com.
+.TP
+.B \-\-parse
+If possible, parse the viewstate.
+.TP
+.B \-\-hash
+Output hash, if one exists.
+.TP
+.B \-\-raw
+The input is raw viewstate data.
+.TP
+.B \-\-no\-hex
+Disable hex output.
+.br
+.SH AUTHOR
+viewstate was written by Ian Ventura-Whiting <fizz@titania.co.uk>.

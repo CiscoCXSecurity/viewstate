@@ -9,6 +9,7 @@ Notes  : This version represents a major rewrite of viewstate. It
 Changes: Feature : Added support for new ASP.net viewstate data.
          Feature : Build with a Makefile
          Feature : You can get viewstate directly from the web.
+         Feature : Man page added.
          Improved: Commandline interface.
          Improved: Added hex output for non-printable characters.
          Fixed   : Removed the comment lines at the bottom of the
