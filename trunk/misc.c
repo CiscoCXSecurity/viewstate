@@ -63,3 +63,92 @@ int getViewstateFromHTML(char *inputString, int maxLength)
 }
 
 
+int fileDownload(char *serverString, char *requestString, char *saveFile)
+{
+	// Variables...
+	char tempString[128];
+	int socketDescriptor;
+	int status;
+	FILE *resultFile;
+	struct hostent *patchHost;
+	struct sockaddr_in serverAddress;
+	struct sockaddr_in localAddress;
+
+	// Open Patch File...
+	resultFile = fopen(saveFile, "w");
+	if (resultFile == NULL)
+	{
+		printf("%sERROR: Could not create save file.%s\n", COL_RED, RESET);
+		return false;
+	}
+
+	// Resolve Server Name...
+	patchHost = gethostbyname(serverString);
+	if (patchHost == NULL)
+	{
+		printf("%sERROR: Could not resolve hostname %s.%s\n", COL_RED, serverString, RESET);
+		fclose(resultFile);
+		return false;
+	}
+
+	// Configure Server Address and Port
+	serverAddress.sin_family = patchHost->h_addrtype;
+	memcpy((char *) &serverAddress.sin_addr.s_addr, patchHost->h_addr_list[0], patchHost->h_length);
+	serverAddress.sin_port = htons(80);
+
+	// Create Socket
+	socketDescriptor = socket(AF_INET, SOCK_STREAM, 0);
+	if(socketDescriptor < 0)
+	{
+		printf("%sERROR: Could not open a socket.%s\n", COL_RED, RESET);
+		fclose(resultFile);
+		return false;
+	}
+
+	// Configure Local Port
+	localAddress.sin_family = AF_INET;
+	localAddress.sin_addr.s_addr = htonl(INADDR_ANY);
+	localAddress.sin_port = htons(0);
+	status = bind(socketDescriptor, (struct sockaddr *) &localAddress, sizeof(localAddress));
+	if(status < 0)
+	{
+		printf("%sERROR: Could not bind to port.%s\n", COL_RED, RESET);
+		fclose(resultFile);
+		return false;
+	}
+
+	// Connect
+	alarm(8);
+	status = connect(socketDescriptor, (struct sockaddr *) &serverAddress, sizeof(serverAddress));
+	alarm(0);
+	if(status < 0)
+	{
+		printf("%sERROR: Could not open a connection to %s.%s\n", COL_RED, serverString, RESET);
+		fclose(resultFile);
+		return false;
+	}
+
+	// Send request
+	status = send(socketDescriptor, requestString, strlen(requestString) + 1, 0);
+	if (status < 0)
+	{
+		close(socketDescriptor);
+		fclose(resultFile);
+		printf("%sERROR: Could not open send request.%s\n", COL_RED, RESET);
+		return false;
+	}
+
+	// Recieve Data
+	memset(tempString ,0 , sizeof(tempString));
+	while (recv(socketDescriptor, tempString, sizeof(tempString) -1, 0) > 0)
+	{
+		fprintf(resultFile, "%s", tempString);
+		memset(tempString ,0 , sizeof(tempString));
+	}
+
+	// Cleanup...
+	fclose(resultFile);
+	close(socketDescriptor);
+	return true;
+}
+
