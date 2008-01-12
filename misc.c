@@ -63,10 +63,18 @@ int getViewstateFromHTML(char *inputString, int maxLength)
 }
 
 
+void stdinTimeout()
+{
+	printf("%sERROR: Timeout reading from stdin.%s\n", COL_RED, RESET);
+	exit(0);
+}
+
+
 int fileDownload(char *serverString, char *requestString, char *saveFile)
 {
 	// Variables...
 	char tempString[128];
+	char *sendString = 0;
 	int socketDescriptor;
 	int status;
 	FILE *resultFile;
@@ -128,15 +136,22 @@ int fileDownload(char *serverString, char *requestString, char *saveFile)
 		return false;
 	}
 
+	// Reserve and create send string...
+	sendString = malloc(strlen(requestString) + 78);
+	memset(sendString, 0, strlen(requestString) + 78);
+	sprintf(sendString, "GET %s HTTP/1.0\r\nUser-Agent: Viewstate\r\nAccept: */*\r\nConnection: Keep-Alive\r\n\r\n", requestString);
+
 	// Send request
-	status = send(socketDescriptor, requestString, strlen(requestString) + 1, 0);
+	status = send(socketDescriptor, sendString, strlen(sendString) + 1, 0);
 	if (status < 0)
 	{
+		free (sendString);
 		close(socketDescriptor);
 		fclose(resultFile);
 		printf("%sERROR: Could not open send request.%s\n", COL_RED, RESET);
 		return false;
 	}
+	free (sendString);
 
 	// Recieve Data
 	memset(tempString ,0 , sizeof(tempString));

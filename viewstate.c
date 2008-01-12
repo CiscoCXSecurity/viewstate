@@ -104,12 +104,15 @@ int main(int argc, char *argv[])
 	char *outputString = 0;
 	char tempChar = 0;
 	char temporaryFileName[64] = "";
+	char serverName[64] = "";
 	char buffer[1024];
 	struct stat *fileStats = 0;
 	int parseStatus = 0;
 	int verbose = 1;
 	long argLoop = 0;
+	int tempInt = 0;
 
+	signal(14, stdinTimeout);
 
 	// Get program parameters
 	for (argLoop = 1; argLoop < argc; argLoop++)
@@ -139,7 +142,7 @@ int main(int argc, char *argv[])
 			outputFileName = argv[argLoop] + 9;
 
 		// HTTP
-		else if (strncmp("--url=", argv[argLoop], 9) == 0)
+		else if (strncmp("--url=", argv[argLoop], 6) == 0)
 			http = argv[argLoop] + 6;
 
 		// Verbose
@@ -168,7 +171,7 @@ int main(int argc, char *argv[])
 	}
 
 	// If input is from stdin...
-	if ((inputFileName == 0) && ((mode == mode_decode) || (mode == mode_encode)))
+	if ((inputFileName == 0) && ((mode == mode_decode) || (mode == mode_encode)) && (http == 0))
 	{
 		// Read stdin...
 		while (feof(inputFile) == 0)
@@ -245,15 +248,58 @@ int main(int argc, char *argv[])
 			// If input is from a URL
 			if (http != 0)
 			{
-				if (fileDownload(char *serverString, char *requestString, char *saveFile) == true)
-					outputFile = fopen(outputFileName, "w");
+				if (strncasecmp(http, "https://", 8) == 0)
+				{
+					error = true;
+					fprintf(outputFile, "%sERROR:%s HTTPS is not supported in this version.\n", COL_RED, RESET);
+				}
+
+				else if (strncasecmp(http, "http://", 7) == 0)
+				{
+					sprintf(temporaryFileName, "%sdelete-me-%d", tmpDir, rand());
+
+					// Is there a path...
+					tempInt = 7;
+					while ((tempInt < strlen(http)) && (http[tempInt] != '/'))
+						tempInt++;
+
+					// No path...
+					if (tempInt == strlen(http))
+					{
+						if (fileDownload(http + 7, "/", temporaryFileName) == true)
+							inputFileName = temporaryFileName;
+					}
+
+					// Path...
+					else
+					{
+						// Get name...
+						tempInt = 7;
+						while ((tempInt < strlen(http)) && (http[tempInt] != '/'))
+						{
+							serverName[tempInt - 7] = http[tempInt];
+							tempInt++;
+						}
+						serverName[tempInt - 7] = 0;
+
+						if (fileDownload(serverName, http + tempInt, temporaryFileName) == true)
+							inputFileName = temporaryFileName;
+					}
+					
+				}
+
+				else
+				{
+					error = true;
+					fprintf(outputFile, "%sERROR:%s URL is not valid. It should be http://...\n", COL_RED, RESET);
+				}
 			}
 
 			// Open output file...
-			else if (outputFileName != 0)
+			if (outputFileName != 0)
 				outputFile = fopen(outputFileName, "w");
 
-			if (outputFile != 0)
+			if ((outputFile != 0) && (error == false))
 			{
 
 				if (verbose > 1)
