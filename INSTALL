@@ -1,0 +1,14 @@
+INSTALL
+=======
+
+
+1. Manual
+
+   $ gcc -o viewstate viewstate.c
+   $ cp viewstate /usr/bin/       (as root)
+
+
+2. Makefile
+
+   $ make
+   $ make install                 (as root)
