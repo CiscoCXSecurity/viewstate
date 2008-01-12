@@ -31,6 +31,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#if !defined(__WIN32__)
+#include <netdb.h>
+#include <sys/socket.h>
+#endif
 
 
 // Colour Console Output...
@@ -49,6 +53,14 @@ const char *COL_CYAN = "";
 #endif
 
 
+// Temp Dir...
+#if !defined(__WIN32__)
+const char *tmpDir = "/tmp/";
+#else
+const char *tmpDir = "%TEMPDIR%";
+#endif
+
+
 // Viewstate includes...
 #include "base64.c"
 #include "misc.c"
@@ -56,11 +68,7 @@ const char *COL_CYAN = "";
 #include "writedata.c"
 
 
-#if !defined(__WIN32__)
-const char *tmpDir = "/tmp/";
-#else
-const char *tmpDir = "%TEMPDIR%/";
-#endif
+
 
 
 // Program banner and help
@@ -84,14 +92,19 @@ int main(int argc, char *argv[])
 	int hex = true;
 	int raw = false;
 	int error = false;
+	int sizeRead = 0;
 	long viewstateLength = 0;
 	FILE *inputFile = stdin;
 	FILE *outputFile = stdout;
+	FILE *tempFileHandle = 0;
+	char *http = 0;
 	char *inputFileName = 0;
 	char *outputFileName = 0;
 	char *inputString = 0;
 	char *outputString = 0;
 	char tempChar = 0;
+	char temporaryFileName[64] = "";
+	char buffer[1024];
 	struct stat *fileStats = 0;
 	int parseStatus = 0;
 	int verbose = 1;
@@ -125,6 +138,10 @@ int main(int argc, char *argv[])
 		else if (strncmp("--output=", argv[argLoop], 9) == 0)
 			outputFileName = argv[argLoop] + 9;
 
+		// HTTP
+		else if (strncmp("--url=", argv[argLoop], 9) == 0)
+			http = argv[argLoop] + 6;
+
 		// Verbose
 		else if (strcmp("--verbose", argv[argLoop]) == 0)
 			verbose = 2;
@@ -150,6 +167,36 @@ int main(int argc, char *argv[])
 			raw = true;
 	}
 
+	// If input is from stdin...
+	if ((inputFileName == 0) && ((mode == mode_decode) || (mode == mode_encode)))
+	{
+		// Read stdin...
+		while (feof(inputFile) == 0)
+		{
+			// Read...
+			memset(buffer, 0, 1024);
+#if !defined(__WIN32__)
+			alarm(2);
+#endif
+			sizeRead = fread(buffer, 1, 1024, inputFile);
+#if !defined(__WIN32__)
+			alarm(0);
+#endif
+
+			// Write to file...
+			if (tempFileHandle == 0)
+			{
+				sprintf(temporaryFileName, "%sdelete-me-%d", tmpDir, rand());
+				tempFileHandle = fopen(temporaryFileName, "w");
+				fwrite(buffer, 1, sizeRead, tempFileHandle);
+			}
+			else
+				fwrite(buffer, 1, sizeRead, tempFileHandle);
+		}
+		fclose(tempFileHandle);
+		inputFileName = temporaryFileName;
+
+	}
 
 	switch (mode)
 	{
@@ -161,40 +208,51 @@ int main(int argc, char *argv[])
 			// Program version banner...
 			printf("%s%s%s\n", COL_BLUE, program_banner, RESET);
 			printf("Viewstate is  a ASP  .Net viewstate  decoder and  encoder.\n");
-			printf("Viewstate  data  is   used   to   maintain  state  between\n");
-			printf("different pages of a web application.\n");
 			printf("Viewstate data  can be encrypted  or have  a hash appended\n");
 			printf("to ensure that the data  has not  been modified.  However,\n");
 			printf("viewstate can also be sent without any form of protection,\n");
 			printf("this enables the data to be modified.\n");
 			printf("If decode or encode are not specified,  it is assumed that\n");
-			printf("help is required.\n");
+			printf("help is required.\n\n");
 			printf("%sCommand:%s\n", COL_BLUE, RESET);
-			printf("  %s%s [Options]%s\n\n", COL_GREEN, argv[0], RESET);
-			printf("%sOptions:%s\n", COL_BLUE, RESET);
+			printf("  %s%s [Mode] [Options]%s\n\n", COL_GREEN, argv[0], RESET);
+			printf("%sModes:%s\n", COL_BLUE, RESET);
 			printf("  %s--decode%s             Decode viewstate data.\n", COL_GREEN, RESET);
 			printf("  %s--encode%s             Encode viewstate data.\n", COL_GREEN, RESET);
+			printf("  %s--version%s            Display the program version.\n", COL_GREEN, RESET);
+			printf("  %s--help%s               Display the help text you are now\n", COL_GREEN, RESET);
+			printf("                       reading.\n\n");
+			printf("%sGeneral Options:%s\n", COL_BLUE, RESET);
 			printf("  %s--input=<file>%s       Input file to process. By default\n", COL_GREEN, RESET);
 			printf("                       input is from stdin.\n");
 			printf("  %s--output=<file>%s      File  to  output to.  By  default\n", COL_GREEN, RESET);
 			printf("                       output is from stdout.\n");
+			printf("  %s--verbose%s            Increase verbosity.\n", COL_GREEN, RESET);
+			printf("  %s--quiet%s              Decrease verbosity.\n\n", COL_GREEN, RESET);
+			printf("%sDecode Options:%s\n", COL_BLUE, RESET);
+			printf("  %s--url=<url>%s          Get the viewstate from a URL,  no\n", COL_GREEN, RESET);
+			printf("                       SSL support in this version.  Specify\n");
+			printf("                       as http://www.somewhere.com.\n");
 			printf("  %s--parse%s              If possible, parse the viewstate.\n", COL_GREEN, RESET);
 			printf("  %s--hash%s               Output hash, if one exists.\n", COL_GREEN, RESET);
 			printf("  %s--raw%s                The input is raw viewstate data.\n", COL_GREEN, RESET);
-			printf("  %s--no-hex%s             Disable hex output.\n", COL_GREEN, RESET);
-			printf("  %s--verbose%s            Increase verbosity.\n", COL_GREEN, RESET);
-			printf("  %s--quiet%s              Decrease verbosity.\n", COL_GREEN, RESET);
-			printf("  %s--version%s            Display the program version.\n", COL_GREEN, RESET);
-			printf("  %s--help%s               Display the help text you are now\n", COL_GREEN, RESET);
-			printf("                       reading.\n");
+			printf("  %s--no-hex%s             Disable hex output.\n\n", COL_GREEN, RESET);
 			break;
 
 
 		// Decode Viewstate
 		case mode_decode:
+			// If input is from a URL
+			if (http != 0)
+			{
+				if (fileDownload(char *serverString, char *requestString, char *saveFile) == true)
+					outputFile = fopen(outputFileName, "w");
+			}
+
 			// Open output file...
-			if (outputFileName != 0)
+			else if (outputFileName != 0)
 				outputFile = fopen(outputFileName, "w");
+
 			if (outputFile != 0)
 			{
 
@@ -431,6 +489,13 @@ int main(int argc, char *argv[])
 				fprintf(outputFile, "%sERROR:%s Could not open output.\n", COL_RED, RESET);
 			break;
 	}
+
+	// Stdin temporary file...
+	if (temporaryFileName[0] != 0)
+	{
+		unlink(temporaryFileName);
+	}
+
 	return 0;
 }
 
