@@ -233,9 +233,11 @@ int main(int argc, char *argv[])
 			printf("  %s--verbose%s            Increase verbosity.\n", COL_GREEN, RESET);
 			printf("  %s--quiet%s              Decrease verbosity.\n\n", COL_GREEN, RESET);
 			printf("%sDecode Options:%s\n", COL_BLUE, RESET);
+#if !defined(__WIN32__)
 			printf("  %s--url=<url>%s          Get the viewstate from a URL,  no\n", COL_GREEN, RESET);
 			printf("                       SSL support in this version.  Specify\n");
 			printf("                       as http://www.somewhere.com.\n");
+#endif
 			printf("  %s--parse%s              If possible, parse the viewstate.\n", COL_GREEN, RESET);
 			printf("  %s--hash%s               Output hash, if one exists.\n", COL_GREEN, RESET);
 			printf("  %s--raw%s                The input is raw viewstate data.\n", COL_GREEN, RESET);
@@ -245,6 +247,7 @@ int main(int argc, char *argv[])
 
 		// Decode Viewstate
 		case mode_decode:
+#if !defined(__WIN32__)
 			// If input is from a URL
 			if (http != 0)
 			{
@@ -294,6 +297,7 @@ int main(int argc, char *argv[])
 					fprintf(outputFile, "%sERROR:%s URL is not valid. It should be http://...\n", COL_RED, RESET);
 				}
 			}
+#endif
 
 			// Open output file...
 			if (outputFileName != 0)

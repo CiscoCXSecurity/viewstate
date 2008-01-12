@@ -70,6 +70,7 @@ void stdinTimeout()
 }
 
 
+#if !defined(__WIN32__)
 int fileDownload(char *serverString, char *requestString, char *saveFile)
 {
 	// Variables...
@@ -166,4 +167,5 @@ int fileDownload(char *serverString, char *requestString, char *saveFile)
 	close(socketDescriptor);
 	return true;
 }
+#endif
 
