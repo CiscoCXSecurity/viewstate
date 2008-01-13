@@ -57,7 +57,7 @@ const char *COL_CYAN = "";
 #if !defined(__WIN32__)
 const char *tmpDir = "/tmp/";
 #else
-const char *tmpDir = "%TEMPDIR%";
+const char *tmpDir = "";
 #endif
 
 
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 	for (argLoop = 1; argLoop < argc; argLoop++)
 	{
 		// Help
-		if (strcmp("--help", argv[argLoop]) == 0)
+		if ((strcmp("--help", argv[argLoop]) == 0) || (strcmp("/?", argv[argLoop]) == 0))
 			mode = mode_help;
 
 		// Version
@@ -254,7 +254,7 @@ int main(int argc, char *argv[])
 				if (strncasecmp(http, "https://", 8) == 0)
 				{
 					error = true;
-					fprintf(outputFile, "%sERROR:%s HTTPS is not supported in this version.\n", COL_RED, RESET);
+					fprintf(stderr, "%sERROR:%s HTTPS is not supported in this version.\n", COL_RED, RESET);
 				}
 
 				else if (strncasecmp(http, "http://", 7) == 0)
@@ -294,7 +294,7 @@ int main(int argc, char *argv[])
 				else
 				{
 					error = true;
-					fprintf(outputFile, "%sERROR:%s URL is not valid. It should be http://...\n", COL_RED, RESET);
+					fprintf(stderr, "%sERROR:%s URL is not valid. It should be http://...\n", COL_RED, RESET);
 				}
 			}
 #endif
@@ -337,7 +337,7 @@ int main(int argc, char *argv[])
 						if (getViewstateFromHTML(inputString, fileStats->st_size) != true)
 						{
 							error = true;
-							fprintf(outputFile, "%sERROR:%s No viewstate data in HTML.\n", COL_RED, RESET);
+							fprintf(stderr, "%sERROR:%s No viewstate data in HTML.\n", COL_RED, RESET);
 						}
 					}
 
@@ -446,7 +446,7 @@ int main(int argc, char *argv[])
 						else
 						{
 							if (verbose > 0)
-								fprintf(outputFile, "%sERROR:%s Decode failed.\n", COL_RED, RESET);
+								fprintf(stderr, "%sERROR:%s Decode failed.\n", COL_RED, RESET);
 						}
 					}
 
@@ -455,7 +455,7 @@ int main(int argc, char *argv[])
 						fclose(inputFile);
 				}
 				else if (verbose > 0)
-					fprintf(outputFile, "%sERROR:%s Could not open input.\n", COL_RED, RESET);
+					fprintf(stderr, "%sERROR:%s Could not open input.\n", COL_RED, RESET);
 
 				// Free input String
 				free(inputString);
@@ -468,7 +468,7 @@ int main(int argc, char *argv[])
 					fclose(outputFile);
 			}
 			else if (verbose > 0)
-				fprintf(outputFile, "%sERROR:%s Could not open output.\n", COL_RED, RESET);
+				fprintf(stderr, "%sERROR:%s Could not open output.\n", COL_RED, RESET);
 			break;
 
 
@@ -519,11 +519,11 @@ int main(int argc, char *argv[])
 							fprintf(outputFile, "\n");
 					}
 					else
-						fprintf(outputFile, "%sERROR:%s Failed to encode string.\n", COL_RED, RESET);
+						fprintf(stderr, "%sERROR:%s Failed to encode string.\n", COL_RED, RESET);
 
 				}
 				else if (verbose > 0)
-					fprintf(outputFile, "%sERROR:%s Could not open input.\n", COL_RED, RESET);
+					fprintf(stderr, "%sERROR:%s Could not open input.\n", COL_RED, RESET);
 
 				// Free input String
 				free(inputString);
@@ -536,7 +536,7 @@ int main(int argc, char *argv[])
 					fclose(outputFile);
 			}
 			else if (verbose > 0)
-				fprintf(outputFile, "%sERROR:%s Could not open output.\n", COL_RED, RESET);
+				fprintf(stderr, "%sERROR:%s Could not open output.\n", COL_RED, RESET);
 			break;
 	}
 
