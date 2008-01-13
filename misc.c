@@ -65,7 +65,7 @@ int getViewstateFromHTML(char *inputString, int maxLength)
 
 void stdinTimeout()
 {
-	printf("%sERROR: Timeout reading from stdin.%s\n", COL_RED, RESET);
+	fprintf(stderr, "%sERROR: Timeout reading from stdin.%s\n", COL_RED, RESET);
 	exit(0);
 }
 
@@ -87,7 +87,7 @@ int fileDownload(char *serverString, char *requestString, char *saveFile)
 	resultFile = fopen(saveFile, "w");
 	if (resultFile == NULL)
 	{
-		printf("%sERROR: Could not create save file.%s\n", COL_RED, RESET);
+		fprintf(stderr, "%sERROR: Could not create save file.%s\n", COL_RED, RESET);
 		return false;
 	}
 
@@ -95,7 +95,7 @@ int fileDownload(char *serverString, char *requestString, char *saveFile)
 	patchHost = gethostbyname(serverString);
 	if (patchHost == NULL)
 	{
-		printf("%sERROR: Could not resolve hostname %s.%s\n", COL_RED, serverString, RESET);
+		fprintf(stderr, "%sERROR: Could not resolve hostname %s.%s\n", COL_RED, serverString, RESET);
 		fclose(resultFile);
 		return false;
 	}
@@ -109,7 +109,7 @@ int fileDownload(char *serverString, char *requestString, char *saveFile)
 	socketDescriptor = socket(AF_INET, SOCK_STREAM, 0);
 	if(socketDescriptor < 0)
 	{
-		printf("%sERROR: Could not open a socket.%s\n", COL_RED, RESET);
+		fprintf(stderr, "%sERROR: Could not open a socket.%s\n", COL_RED, RESET);
 		fclose(resultFile);
 		return false;
 	}
@@ -121,7 +121,7 @@ int fileDownload(char *serverString, char *requestString, char *saveFile)
 	status = bind(socketDescriptor, (struct sockaddr *) &localAddress, sizeof(localAddress));
 	if(status < 0)
 	{
-		printf("%sERROR: Could not bind to port.%s\n", COL_RED, RESET);
+		fprintf(stderr, "%sERROR: Could not bind to port.%s\n", COL_RED, RESET);
 		fclose(resultFile);
 		return false;
 	}
@@ -132,7 +132,7 @@ int fileDownload(char *serverString, char *requestString, char *saveFile)
 	alarm(0);
 	if(status < 0)
 	{
-		printf("%sERROR: Could not open a connection to %s.%s\n", COL_RED, serverString, RESET);
+		fprintf(stderr, "%sERROR: Could not open a connection to %s.%s\n", COL_RED, serverString, RESET);
 		fclose(resultFile);
 		return false;
 	}
@@ -149,7 +149,7 @@ int fileDownload(char *serverString, char *requestString, char *saveFile)
 		free (sendString);
 		close(socketDescriptor);
 		fclose(resultFile);
-		printf("%sERROR: Could not open send request.%s\n", COL_RED, RESET);
+		fprintf(stderr, "%sERROR: Could not open send request.%s\n", COL_RED, RESET);
 		return false;
 	}
 	free (sendString);
